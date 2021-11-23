@@ -296,13 +296,17 @@ describe('FetchService', () => {
     );
     fetchService.fetchMeta = jest.fn();
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(1);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(1, (content) => {
       if (content.block.block.header.number.toNumber() === 10) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   if (content.block.block.header.number.toNumber() === 10) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
   }, 500000);
 
@@ -357,7 +361,7 @@ describe('FetchService', () => {
     (fetchService as any).latestFinalizedHeight = 1005;
     (fetchService as any).latestBufferedHeight = undefined;
     (fetchService as any).latestProcessedHeight = undefined;
-    const loopPromise = fetchService.startLoop(1000);
+    const loopPromise = fetchService.startLoop(1000, () => Promise.resolve());
     eventEmitter.on(`blocknumber_queue_size`, (nextBufferSize) => {
       // [1000,1001,1002,1003,1004]
       if (nextBufferSize.value >= 5) {
@@ -366,6 +370,68 @@ describe('FetchService', () => {
     });
     await loopPromise;
     expect(dictionaryValidationSpy).toHaveBeenCalledTimes(1);
+    expect(nextEndBlockHeightSpy).toHaveBeenCalledTimes(1);
+    //we expect after use the original method, next loop will still use dictionary by default
+    expect((fetchService as any).useDictionary).toBeTruthy();
+  }, 500000);
+
+  it('skip use dictionary once if getDictionary(api failure) return undefined ', async () => {
+    const batchSize = 20;
+    project.network.dictionary =
+      'https://api.subquery.network/sq/subquery/dictionary-polkadot';
+    project.dataSources = [
+      {
+        name: 'runtime',
+        kind: SubqlDatasourceKind.Runtime,
+        startBlock: 1,
+        mapping: {
+          entryScript: '',
+          handlers: [
+            {
+              handler: 'handleBond',
+              kind: SubqlHandlerKind.Event,
+              filter: {
+                module: 'staking',
+                method: 'Bonded',
+              },
+            },
+          ],
+        },
+      },
+    ];
+    const dictionaryService = mockDictionaryService2();
+    const dsPluginService = new DsProcessorService(project);
+    const eventEmitter = new EventEmitter2();
+    const fetchService = new FetchService(
+      apiService,
+      new NodeConfig({ subquery: '', subqueryName: '', batchSize }),
+      project,
+      dictionaryService,
+      dsPluginService,
+      eventEmitter,
+    );
+    const nextEndBlockHeightSpy = jest.spyOn(
+      fetchService as any,
+      `nextEndBlockHeight`,
+    );
+    const dictionaryValidationSpy = jest.spyOn(
+      fetchService as any,
+      `dictionaryValidation`,
+    );
+    await fetchService.init();
+    (fetchService as any).latestFinalizedHeight = 1005;
+    (fetchService as any).latestBufferedHeight = undefined;
+    (fetchService as any).latestProcessedHeight = undefined;
+    const loopPromise = fetchService.startLoop(1000, () => Promise.resolve());
+    eventEmitter.on(`blocknumber_queue_size`, (nextBufferSize) => {
+      // [1000,1001,1002,1003,1004]
+      if (nextBufferSize.value >= 5) {
+        fetchService.onApplicationShutdown();
+      }
+    });
+    await loopPromise;
+    //validation will not be called as dictionary is undefined
+    expect(dictionaryValidationSpy).toHaveBeenCalledTimes(0);
     expect(nextEndBlockHeightSpy).toHaveBeenCalledTimes(1);
     //we expect after use the original method, next loop will still use dictionary by default
     expect((fetchService as any).useDictionary).toBeTruthy();
@@ -416,7 +482,7 @@ describe('FetchService', () => {
     (fetchService as any).latestFinalizedHeight = 16000;
     (fetchService as any).latestBufferedHeight = undefined;
     (fetchService as any).latestProcessedHeight = undefined;
-    const loopPromise = fetchService.startLoop(1000);
+    const loopPromise = fetchService.startLoop(1000, () => Promise.resolve());
     eventEmitter.on(`blocknumber_queue_size`, (nextBufferSize) => {
       if (nextBufferSize.value >= 5) {
         fetchService.onApplicationShutdown();
@@ -472,7 +538,7 @@ describe('FetchService', () => {
     (fetchService as any).latestFinalizedHeight = 16000;
     (fetchService as any).latestBufferedHeight = undefined;
     (fetchService as any).latestProcessedHeight = undefined;
-    const loopPromise = fetchService.startLoop(1000);
+    const loopPromise = fetchService.startLoop(1000, () => Promise.resolve());
     eventEmitter.on(`blocknumber_queue_size`, (nextBufferSize) => {
       if (nextBufferSize.value >= 8) {
         fetchService.onApplicationShutdown();
@@ -507,13 +573,17 @@ describe('FetchService', () => {
 
     await fetchService.init();
 
-    const loopPromise = fetchService.startLoop(1);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(1, (content) => {
       if (content.block.block.header.number.toNumber() === 10) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   if (content.block.block.header.number.toNumber() === 10) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
 
     expect(baseHandlerFilters).toHaveBeenCalledTimes(1);

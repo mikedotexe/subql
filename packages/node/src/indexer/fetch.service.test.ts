@@ -86,13 +86,17 @@ describe('FetchService', () => {
     const provider = apiOptions.provider;
     const getSendSpy = jest.spyOn(provider, 'send');
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(1);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(1, (content) => {
       if (content.block.block.header.number.toNumber() === 10) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   if (content.block.block.header.number.toNumber() === 10) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
@@ -113,14 +117,19 @@ describe('FetchService', () => {
 
     await fetchService.init();
     //29150
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       //29250
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   //29250
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
@@ -162,14 +171,19 @@ describe('FetchService', () => {
       `dictionaryValidation`,
     );
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       //29250
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   //29250
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -192,14 +206,19 @@ describe('FetchService', () => {
       `dictionaryValidation`,
     );
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       //29250
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   //29250
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -238,14 +257,19 @@ describe('FetchService', () => {
       `dictionaryValidation`,
     );
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       //29250
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   //29250
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -292,14 +316,19 @@ describe('FetchService', () => {
       `dictionaryValidation`,
     );
     await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       //29250
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   //29250
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -344,13 +373,17 @@ describe('FetchService', () => {
     );
     await fetchService.init();
 
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
+    const loopPromise = fetchService.startLoop(29230, (content) => {
       if (content.block.block.header.number.toNumber() === 29240) {
         fetchService.onApplicationShutdown();
       }
     });
+    // eslint-disable-next-line @typescript-eslint/require-await
+    // fetchService.register(async (content) => {
+    //   if (content.block.block.header.number.toNumber() === 29240) {
+    //     fetchService.onApplicationShutdown();
+    //   }
+    // });
     await loopPromise;
     expect(dictionaryValidationSpy).toBeCalledTimes(1);
     expect(nextEndBlockHeightSpy).toBeCalled();

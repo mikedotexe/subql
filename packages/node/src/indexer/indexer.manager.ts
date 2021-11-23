@@ -225,13 +225,15 @@ export class IndexerManager {
       }
     }
 
-    void this.fetchService.startLoop(startHeight).catch((err) => {
-      logger.error(err, 'failed to fetch block');
-      // FIXME: retry before exit
-      process.exit(1);
-    });
     this.filteredDataSources = this.filterDataSources(startHeight);
-    this.fetchService.register((block) => this.indexBlock(block));
+
+    void this.fetchService
+      .startLoop(startHeight, (b) => this.indexBlock(b))
+      .catch((err) => {
+        logger.error(err, 'failed to fetch block');
+        // FIXME: retry before exit
+        process.exit(1);
+      });
   }
 
   private setBlockOffset(offset: number): void {
@@ -444,7 +446,7 @@ export class IndexerManager {
     filteredDs = filteredDs.filter((ds) => ds.startBlock <= processedHeight);
     if (filteredDs.length === 0) {
       logger.error(
-        `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${processedHeight} 
+        `Your start block is greater than the current indexed block height in your database. Either change your startBlock (project.yaml) to <= ${processedHeight}
          or delete your database and start again from the currently specified startBlock`,
       );
       process.exit(1);
