@@ -8,7 +8,7 @@ export enum IndexerEvent {
   BlockBest = 'block_best_height',
   BlockProcessing = 'block_processing_height',
   BlockQueueSize = 'block_queue_size',
-  BlocknumberQueueSize = 'blocknumber_queue_size',
+  // BlocknumberQueueSize = 'blocknumber_queue_size',
   NetworkMetadata = 'network_metadata',
   UsingDictionary = 'using_dictionary',
   SkipDictionary = 'skip_dictionary',
