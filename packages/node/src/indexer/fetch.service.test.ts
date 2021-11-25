@@ -91,12 +91,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   if (content.block.block.header.number.toNumber() === 10) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
@@ -123,13 +117,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   //29250
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
@@ -177,13 +164,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   //29250
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -212,13 +192,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   //29250
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -263,13 +236,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   //29250
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -322,13 +288,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   //29250
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
@@ -378,12 +337,6 @@ describe('FetchService', () => {
         fetchService.onApplicationShutdown();
       }
     });
-    // eslint-disable-next-line @typescript-eslint/require-await
-    // fetchService.register(async (content) => {
-    //   if (content.block.block.header.number.toNumber() === 29240) {
-    //     fetchService.onApplicationShutdown();
-    //   }
-    // });
     await loopPromise;
     expect(dictionaryValidationSpy).toBeCalledTimes(1);
     expect(nextEndBlockHeightSpy).toBeCalled();
