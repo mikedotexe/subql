@@ -575,6 +575,6 @@ describe('FetchService', () => {
     await loopPromise;
 
     expect(baseHandlerFilters).toHaveBeenCalledTimes(1);
-    expect(getDsProcessor).toHaveBeenCalledTimes(2);
+    expect(getDsProcessor).toHaveBeenCalledTimes(3);
   }, 50000);
 });
