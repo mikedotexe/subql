@@ -377,14 +377,15 @@ describe('FetchService', () => {
     project.dataSources = [
       {
         name: 'runtime',
-        kind: SubqlDatasourceKind.Runtime,
+        kind: SubstrateDatasourceKind.Runtime,
         startBlock: 1,
         mapping: {
           entryScript: '',
+          file: '',
           handlers: [
             {
               handler: 'handleBond',
-              kind: SubqlHandlerKind.Event,
+              kind: SubstrateHandlerKind.Event,
               filter: {
                 module: 'staking',
                 method: 'Bonded',
