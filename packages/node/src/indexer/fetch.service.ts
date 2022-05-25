@@ -22,6 +22,7 @@ import {
 import { DictionaryQueryEntry, SubstrateCustomHandler } from '@subql/types';
 
 import { isUndefined, range, sortBy, uniqBy } from 'lodash';
+import newrelic from 'newrelic';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqueryProject } from '../configure/SubqueryProject';
 import { getLogger } from '../utils/logger';
@@ -444,9 +445,22 @@ export class FetchService implements OnApplicationShutdown {
 
   @profiler(argv.profiler)
   async fetchMeta(height: number): Promise<boolean> {
-    const parentBlockHash = await this.api.rpc.chain.getBlockHash(
-      Math.max(height - 1, 0),
+    // https://docs.newrelic.com/docs/agents/nodejs-agent/supported-features/nodejs-agent-api#startBackgroundTransaction
+    const parentBlockHash = await newrelic.startBackgroundTransaction(
+      'getBlockHash',
+      async () => {
+        const transaction = newrelic.getTransaction();
+        const ret = await this.api.rpc.chain.getBlockHash(
+          Math.max(height - 1, 0),
+        );
+
+        transaction.end();
+        return ret;
+      },
     );
+    // const parentBlockHash = await this.api.rpc.chain.getBlockHash(
+    //   Math.max(height - 1, 0),
+    // );
     const runtimeVersion = await this.api.rpc.state.getRuntimeVersion(
       parentBlockHash,
     );

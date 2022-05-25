@@ -1646,6 +1646,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@grpc/grpc-js@npm:^1.5.5":
+  version: 1.6.7
+  resolution: "@grpc/grpc-js@npm:1.6.7"
+  dependencies:
+    "@grpc/proto-loader": ^0.6.4
+    "@types/node": ">=12.12.47"
+  checksum: 2668b08c2eec433970561384b22cf81443106835077ff1d8b7989cb5519fb7d2284c7a46b6ae94968f3b488ffbd9326ba9b4fbe4971a185d3b89eb0ee99e4fcd
+  languageName: node
+  linkType: hard
+
+"@grpc/proto-loader@npm:^0.6.12, @grpc/proto-loader@npm:^0.6.4":
+  version: 0.6.12
+  resolution: "@grpc/proto-loader@npm:0.6.12"
+  dependencies:
+    "@types/long": ^4.0.1
+    lodash.camelcase: ^4.3.0
+    long: ^4.0.0
+    protobufjs: ^6.10.0
+    yargs: ^16.2.0
+  bin:
+    proto-loader-gen-types: build/bin/proto-loader-gen-types.js
+  checksum: 19bb53811e650e9a975cafa1e0cb084870235cff957695a38a8429c4a71435d584740c1d780fb51882ff4d4863cb9c81393d4dc25c55f5078be283f5ea5289a9
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.9.2":
   version: 0.9.5
   resolution: "@humanwhocodes/config-array@npm:0.9.5"
@@ -2136,6 +2161,47 @@ __metadata:
     "@nestjs/platform-express":
       optional: true
   checksum: e896199b4801009f39204baaa371b7ba77ce5737847b65a281a9bf7a006ba3a7ca09e107081d7f1e131ce0c42462e245408b70b9da2de5ac000a39060c616d4d
+  languageName: node
+  linkType: hard
+
+"@newrelic/aws-sdk@npm:^4.1.1":
+  version: 4.1.2
+  resolution: "@newrelic/aws-sdk@npm:4.1.2"
+  dependencies:
+    semver: ^7.3.5
+  peerDependencies:
+    newrelic: ">=6.11.0"
+  checksum: 610f6353a750f84ee98cb5b1a147afa1d22105ca7f5e43be5f4db21552e84b2b822a1d939eb1b0d550d9011de85f62d3196cdc68a8f0cb214c80912afcab0d6d
+  languageName: node
+  linkType: hard
+
+"@newrelic/koa@npm:^6.1.1":
+  version: 6.1.2
+  resolution: "@newrelic/koa@npm:6.1.2"
+  peerDependencies:
+    newrelic: ">=6.11.0"
+  checksum: e269d37b13168a0233b2b01cbba9f2f45325484825ce3f09bcc4d18d53704e60af69d51be62c87d8182f60fc054dbb68bb44870b93e3a2c25a77b982d10ba483
+  languageName: node
+  linkType: hard
+
+"@newrelic/native-metrics@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@newrelic/native-metrics@npm:8.0.0"
+  dependencies:
+    https-proxy-agent: ^5.0.0
+    nan: ^2.15.0
+    node-gyp: latest
+    semver: ^5.5.1
+  checksum: a7867753ba680bc8e873d1b25decf6bbadb7e7cd8946119e4c2e16535d5c8485ba4d20c23f34e611e282270fbc5004a6ad964494cbeab02d5b9f518311e244d0
+  languageName: node
+  linkType: hard
+
+"@newrelic/superagent@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "@newrelic/superagent@npm:5.1.1"
+  peerDependencies:
+    newrelic: ">=6.11.0"
+  checksum: b43f7b9bb6732d5cfe1623bea95466d97ce1d19a61fcd470ddf8bb36420c2b9f8f314ddb7a696efdbd6e140ac0dc4f31e93b3f778d3dc755577981f8bd1192bf
   languageName: node
   linkType: hard
 
@@ -3451,6 +3517,7 @@ __metadata:
     "@types/express": ^4.17.13
     "@types/jest": ^27.4.0
     "@types/lodash": ^4.14.178
+    "@types/newrelic": ^7.0.3
     "@types/pino": ^6.3.12
     "@types/supertest": ^2.0.11
     "@types/tar": ^6.1.1
@@ -3462,6 +3529,7 @@ __metadata:
     eventemitter2: ^6.4.5
     lodash: ^4.17.21
     merkle-tools: ^1.4.1
+    newrelic: ^8.12.0
     nodemon: ^2.0.15
     parse-json: ^6.0.2
     pg: ^8.7.1
@@ -4078,6 +4146,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/newrelic@npm:^7.0.3":
+  version: 7.0.3
+  resolution: "@types/newrelic@npm:7.0.3"
+  checksum: 31156f61c5cf6c22e3cd227966499d758e4af278a2b0097194578feee9579339473f7a08b07556530046a2f64ba449656a220a553116b475c4bbd8cca177dfd3
+  languageName: node
+  linkType: hard
+
 "@types/node-fetch@npm:^2.6.1":
   version: 2.6.1
   resolution: "@types/node-fetch@npm:2.6.1"
@@ -4106,6 +4181,13 @@ __metadata:
   version: 11.11.6
   resolution: "@types/node@npm:11.11.6"
   checksum: 075f1c011cf568e49701419acbcb55c24906b3bb5a34d9412a3b88f228a7a78401a5ad4d3e1cd6855c99aaea5ef96e37fc86ca097e50f06da92cf822befc1fff
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:>=12.12.47":
+  version: 17.0.35
+  resolution: "@types/node@npm:17.0.35"
+  checksum: 7a24946ae7fd20267ed92466384f594e448bfb151081158d565cc635d406ecb29ea8fb85fcd2a1f71efccf26fb5bd3c6f509bde56077eb8b832b847a6664bc62
   languageName: node
   linkType: hard
 
@@ -4569,6 +4651,13 @@ __metadata:
     "@typescript-eslint/types": 5.23.0
     eslint-visitor-keys: ^3.0.0
   checksum: 322e10d52a985e8a90d3612bb9d09a87dc64fc4cb1248484f1a9a7a98f65d3ef65a465ce868773a4939e35fa3b726ad609dac5a168efd7eaca4b06df33e965e3
+  languageName: node
+  linkType: hard
+
+"@tyriar/fibonacci-heap@npm:^2.0.7":
+  version: 2.0.9
+  resolution: "@tyriar/fibonacci-heap@npm:2.0.9"
+  checksum: 1781df7370351878a16498778ffd417ac13ddff19a58d59571f8cb93d5884cbba27e1956112820ff37f91fc386aa2d3936099e03e7d5579ff5ba9d4d73209df4
   languageName: node
   linkType: hard
 
@@ -6681,6 +6770,18 @@ __metadata:
     readable-stream: ^2.2.2
     typedarray: ^0.0.6
   checksum: 1ef77032cb4459dcd5187bd710d6fc962b067b64ec6a505810de3d2b8cc0605638551b42f8ec91edf6fcd26141b32ef19ad749239b58fae3aba99187adc32285
+  languageName: node
+  linkType: hard
+
+"concat-stream@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "concat-stream@npm:2.0.0"
+  dependencies:
+    buffer-from: ^1.0.0
+    inherits: ^2.0.3
+    readable-stream: ^3.0.2
+    typedarray: ^0.0.6
+  checksum: d7f75d48f0ecd356c1545d87e22f57b488172811b1181d96021c7c4b14ab8855f5313280263dca44bb06e5222f274d047da3e290a38841ef87b59719bde967c7
   languageName: node
   linkType: hard
 
@@ -11013,7 +11114,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-stringify-safe@npm:^5.0.1":
+"json-stringify-safe@npm:^5.0.0, json-stringify-safe@npm:^5.0.1":
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1"
   checksum: 48ec0adad5280b8a96bb93f4563aa1667fd7a36334f79149abd42446d0989f2ddc58274b479f4819f1f00617957e6344c886c55d05a4e15ebb4ab931e4a6a8ee
@@ -11434,6 +11535,13 @@ __metadata:
   dependencies:
     p-locate: ^5.0.0
   checksum: 72eb661788a0368c099a184c59d2fee760b3831c9c1c33955e8a19ae4a21b4116e53fa736dc086cdeb9fce9f7cc508f2f92d2d3aae516f133e16a2bb59a39f5a
+  languageName: node
+  linkType: hard
+
+"lodash.camelcase@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "lodash.camelcase@npm:4.3.0"
+  checksum: cb9227612f71b83e42de93eccf1232feeb25e705bdb19ba26c04f91e885bfd3dd5c517c4a97137658190581d3493ea3973072ca010aab7e301046d90740393d1
   languageName: node
   linkType: hard
 
@@ -12211,6 +12319,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nan@npm:^2.15.0":
+  version: 2.16.0
+  resolution: "nan@npm:2.16.0"
+  dependencies:
+    node-gyp: latest
+  checksum: cb16937273ea55b01ea47df244094c12297ce6b29b36e845d349f1f7c268b8d7c5abd126a102c5678a1e1afd0d36bba35ea0cc959e364928ce60561c9306064a
+  languageName: node
+  linkType: hard
+
 "nanoid@npm:^3.0.2, nanoid@npm:^3.1.12, nanoid@npm:^3.1.20":
   version: 3.3.4
   resolution: "nanoid@npm:3.3.4"
@@ -12277,6 +12394,32 @@ __metadata:
   version: 2.6.2
   resolution: "neo-async@npm:2.6.2"
   checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
+  languageName: node
+  linkType: hard
+
+"newrelic@npm:^8.12.0":
+  version: 8.12.0
+  resolution: "newrelic@npm:8.12.0"
+  dependencies:
+    "@grpc/grpc-js": ^1.5.5
+    "@grpc/proto-loader": ^0.6.12
+    "@newrelic/aws-sdk": ^4.1.1
+    "@newrelic/koa": ^6.1.1
+    "@newrelic/native-metrics": ^8.0.0
+    "@newrelic/superagent": ^5.1.0
+    "@tyriar/fibonacci-heap": ^2.0.7
+    async: ^3.2.3
+    concat-stream: ^2.0.0
+    https-proxy-agent: ^5.0.0
+    json-stringify-safe: ^5.0.0
+    readable-stream: ^3.6.0
+    semver: ^5.3.0
+  dependenciesMeta:
+    "@newrelic/native-metrics":
+      optional: true
+  bin:
+    newrelic-naming-rules: bin/test-naming-rules.js
+  checksum: d45ae9fef867c35b0cf14ae9ae301c0e07769f825d9e62aa7375237966d5bb3565237afadc6ec398e2a0f853e6d3b6aa3d83c6c37c23c7cd8c4bbbfda4fe716b
   languageName: node
   linkType: hard
 
@@ -13662,6 +13805,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"protobufjs@npm:^6.10.0":
+  version: 6.11.3
+  resolution: "protobufjs@npm:6.11.3"
+  dependencies:
+    "@protobufjs/aspromise": ^1.1.2
+    "@protobufjs/base64": ^1.1.2
+    "@protobufjs/codegen": ^2.0.4
+    "@protobufjs/eventemitter": ^1.1.0
+    "@protobufjs/fetch": ^1.1.0
+    "@protobufjs/float": ^1.0.2
+    "@protobufjs/inquire": ^1.1.0
+    "@protobufjs/path": ^1.1.2
+    "@protobufjs/pool": ^1.1.0
+    "@protobufjs/utf8": ^1.1.0
+    "@types/long": ^4.0.1
+    "@types/node": ">=13.7.0"
+    long: ^4.0.0
+  bin:
+    pbjs: bin/pbjs
+    pbts: bin/pbts
+  checksum: 4a6ce1964167e4c45c53fd8a312d7646415c777dd31b4ba346719947b88e61654912326101f927da387d6b6473ab52a7ea4f54d6f15d63b31130ce28e2e15070
+  languageName: node
+  linkType: hard
+
 "protobufjs@npm:^6.10.2, protobufjs@npm:~6.11.2":
   version: 6.11.2
   resolution: "protobufjs@npm:6.11.2"
@@ -13980,7 +14147,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0":
+"readable-stream@npm:^3.0.2, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0":
   version: 3.6.0
   resolution: "readable-stream@npm:3.6.0"
   dependencies:
@@ -14483,7 +14650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.5.0, semver@npm:^5.6.0, semver@npm:^5.7.1":
+"semver@npm:2 || 3 || 4 || 5, semver@npm:^5.3.0, semver@npm:^5.5.0, semver@npm:^5.5.1, semver@npm:^5.6.0, semver@npm:^5.7.1":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
   bin:
