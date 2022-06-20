@@ -30,7 +30,7 @@ import { range, sortBy, uniqBy } from 'lodash';
 import { NodeConfig } from '../configure/NodeConfig';
 import { SubqlProjectDs, SubqueryProject } from '../configure/SubqueryProject';
 import { getLogger } from '../utils/logger';
-import { profiler, profilerWrap } from '../utils/profiler';
+import { profiler } from '../utils/profiler';
 import { isBaseHandler, isCustomHandler } from '../utils/project';
 import { delay } from '../utils/promise';
 import * as SubstrateUtil from '../utils/substrate';
@@ -44,7 +44,6 @@ import {
 import { DsProcessorService } from './ds-processor.service';
 import { DynamicDsService } from './dynamic-ds.service';
 import { IndexerEvent } from './events';
-import { ProjectService } from './project.service';
 import { IBlockDispatcher } from './worker/block-dispatcher.service';
 
 const logger = getLogger('fetch');
@@ -136,7 +135,6 @@ export class FetchService implements OnApplicationShutdown {
     private dsProcessorService: DsProcessorService,
     private dynamicDsService: DynamicDsService,
     private eventEmitter: EventEmitter2,
-    private projectService: ProjectService,
   ) {
     this.batchSizeScale = 1;
   }
@@ -239,7 +237,7 @@ export class FetchService implements OnApplicationShutdown {
       !!this.project.network.dictionary;
   }
 
-  async init(): Promise<void> {
+  async init(startHeight: number): Promise<void> {
     await this.syncDynamicDatascourcesFromMeta();
     this.updateDictionary();
     this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
@@ -254,7 +252,7 @@ export class FetchService implements OnApplicationShutdown {
         ? specVersionResponse
         : [];
 
-    void this.startLoop(this.projectService.startHeight);
+    void this.startLoop(startHeight);
   }
 
   @Interval(CHECK_MEMORY_INTERVAL)
@@ -457,7 +455,7 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   @profiler(argv.profiler)
-  async prefetchMeta(height: number) {
+  async prefetchMeta(height: number): Promise<void> {
     const blockHash = await this.api.rpc.chain.getBlockHash(height);
     if (
       this.parentSpecVersion &&

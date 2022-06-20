@@ -4,6 +4,7 @@
 import path from 'path';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ApiOptions } from '@polkadot/api/types';
+import { RuntimeVersion } from '@polkadot/types/interfaces';
 import {
   SubstrateDatasourceKind,
   SubstrateHandlerKind,
@@ -17,6 +18,9 @@ import { DictionaryService } from './dictionary.service';
 import { DsProcessorService } from './ds-processor.service';
 import { DynamicDsService } from './dynamic-ds.service';
 import { FetchService } from './fetch.service';
+import { IndexerManager } from './indexer.manager';
+import { BlockContent } from './types';
+import { BlockDispatcherService } from './worker/block-dispatcher.service';
 
 function testSubqueryProject(): SubqueryProject {
   return {
@@ -49,11 +53,27 @@ function testSubqueryProject(): SubqueryProject {
   };
 }
 
+function mockIndexerManager(): IndexerManager & {
+  register: (handler: IndexerManager['indexBlock']) => void;
+} {
+  let _fn: any;
+
+  return {
+    register: (fn) => (_fn = fn),
+    indexBlock: (block: BlockContent, runtimeVersion: RuntimeVersion) => {
+      _fn?.(block, runtimeVersion);
+
+      return Promise.resolve();
+    },
+  } as any;
+}
+
 jest.setTimeout(200000);
 
 async function createFetchService(
   project = testSubqueryProject(),
   batchSize = 5,
+  indexerManager: IndexerManager,
 ): Promise<FetchService> {
   const apiService = new ApiService(project, new EventEmitter2());
   const dsProcessorService = new DsProcessorService(project);
@@ -61,15 +81,26 @@ async function createFetchService(
   (dynamicDsService as any).getDynamicDatasources = jest.fn(() => []);
   await apiService.init();
   const dictionaryService = new DictionaryService(project);
-  const dsPluginService = new DsProcessorService(project);
+  const eventEmitter = new EventEmitter2();
+  const nodeConfig = new NodeConfig({
+    subquery: '',
+    subqueryName: '',
+    batchSize,
+  });
   return new FetchService(
     apiService,
-    new NodeConfig({ subquery: '', subqueryName: '', batchSize }),
+    nodeConfig,
     project,
+    new BlockDispatcherService(
+      apiService,
+      nodeConfig,
+      indexerManager,
+      eventEmitter,
+    ),
     dictionaryService,
-    dsPluginService,
+    dsProcessorService,
     dynamicDsService,
-    new EventEmitter2(),
+    eventEmitter,
   );
 }
 
@@ -85,22 +116,28 @@ describe('FetchService', () => {
   it('fetch meta data once when spec version not changed in range', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
 
     const apiService = (fetchService as any).apiService as ApiService;
     const apiOptions = (apiService as any).apiOption as ApiOptions;
     const provider = apiOptions.provider;
     const getSendSpy = jest.spyOn(provider, 'send');
-    await fetchService.init();
-    const loopPromise = fetchService.startLoop(1);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      if (content.block.block.header.number.toNumber() === 10) {
-        fetchService.onApplicationShutdown();
-      }
+
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 10) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(1);
+    await pendingCondition;
+
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
     );
@@ -110,25 +147,28 @@ describe('FetchService', () => {
   it('fetch metadata two times when spec version changed in range', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
 
     const apiService = (fetchService as any).apiService as ApiService;
     const apiOptions = (apiService as any).apiOption as ApiOptions;
     const provider = apiOptions.provider;
     const getSendSpy = jest.spyOn(provider, 'send');
 
-    await fetchService.init();
-    //29150
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      //29250
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     const getMetadataCalls = getSendSpy.mock.calls.filter(
       (call) => call[0] === 'state_getMetadata',
     );
@@ -138,6 +178,7 @@ describe('FetchService', () => {
   it('not use dictionary if dictionary is not defined in project config', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //filter is defined
     project.dataSources = [
       {
@@ -158,7 +199,7 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
 
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
@@ -168,16 +209,20 @@ describe('FetchService', () => {
       fetchService as any,
       `dictionaryValidation`,
     );
-    await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      //29250
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
   }, 500000);
@@ -185,11 +230,12 @@ describe('FetchService', () => {
   it('not use dictionary if filters not defined in datasource', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/dictionary-polkadot';
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
       `nextEndBlockHeight`,
@@ -198,16 +244,20 @@ describe('FetchService', () => {
       fetchService as any,
       `dictionaryValidation`,
     );
-    await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      //29250
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
   }, 500000);
@@ -215,6 +265,7 @@ describe('FetchService', () => {
   it('not use dictionary if block handler is defined in datasource', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/dictionary-polkadot';
@@ -235,7 +286,7 @@ describe('FetchService', () => {
         },
       },
     ];
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
       `nextEndBlockHeight`,
@@ -244,16 +295,20 @@ describe('FetchService', () => {
       fetchService as any,
       `dictionaryValidation`,
     );
-    await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      //29250
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
   }, 500000);
@@ -261,6 +316,7 @@ describe('FetchService', () => {
   it('not use dictionary if one of the handler filter module or method is not defined', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -289,7 +345,7 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
       `nextEndBlockHeight`,
@@ -298,16 +354,20 @@ describe('FetchService', () => {
       fetchService as any,
       `dictionaryValidation`,
     );
-    await fetchService.init();
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      //29250
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     expect(dictionaryValidationSpy).not.toBeCalled();
     expect(nextEndBlockHeightSpy).toBeCalled();
   }, 500000);
@@ -315,6 +375,7 @@ describe('FetchService', () => {
   it('set useDictionary to false if dictionary metadata not match with the api', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to different network
     //set to a kusama network and use polkadot dictionary
     project.network.endpoint = 'wss://kusama.api.onfinality.io/public-ws';
@@ -339,7 +400,7 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
 
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
@@ -349,16 +410,20 @@ describe('FetchService', () => {
       fetchService as any,
       `dictionaryValidation`,
     );
-    await fetchService.init();
 
-    const loopPromise = fetchService.startLoop(29230);
-    // eslint-disable-next-line @typescript-eslint/require-await
-    fetchService.register(async (content) => {
-      if (content.block.block.header.number.toNumber() === 29240) {
-        fetchService.onApplicationShutdown();
-      }
+    const pendingCondition = new Promise((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      indexerManager.register(async (content) => {
+        if (content.block.block.header.number.toNumber() === 29240) {
+          fetchService.onApplicationShutdown();
+          resolve(undefined);
+        }
+      });
     });
-    await loopPromise;
+
+    await fetchService.init(29230);
+    await pendingCondition;
+
     expect(dictionaryValidationSpy).toBeCalledTimes(1);
     expect(nextEndBlockHeightSpy).toBeCalled();
   }, 500000);
@@ -366,6 +431,7 @@ describe('FetchService', () => {
   it('use dictionary and specVersionMap to get block specVersion', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -391,16 +457,19 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
-    await fetchService.init();
+    fetchService = await createFetchService(project, batchSize, indexerManager);
+    await fetchService.init(1);
     const getSpecFromMapSpy = jest.spyOn(fetchService, 'getSpecFromMap');
     const specVersion = await fetchService.getSpecVersion(8638105);
     expect(getSpecFromMapSpy).toBeCalledTimes(1);
+
+    fetchService.onApplicationShutdown();
   }, 500000);
 
   it('use api to get block specVersion when blockHeight out of specVersionMap', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -426,8 +495,8 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
-    await fetchService.init();
+    fetchService = await createFetchService(project, batchSize, indexerManager);
+    await fetchService.init(1);
     const getSpecFromMapSpy = jest.spyOn(fetchService, 'getSpecFromMap');
     const getSpecFromApiSpy = jest.spyOn(fetchService, 'getSpecFromApi');
 
@@ -443,6 +512,7 @@ describe('FetchService', () => {
   it('only fetch SpecVersion from dictionary once', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -466,11 +536,12 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
+    fetchService = await createFetchService(project, batchSize, indexerManager);
     const dictionaryService = (fetchService as any).dictionaryService;
     const getSpecVersionSpy = jest.spyOn(dictionaryService, 'getSpecVersion');
 
-    await fetchService.init();
+    await fetchService.init(1);
+    fetchService.onApplicationShutdown();
 
     await fetchService.getSpecVersion(8638105);
     await fetchService.getSpecVersion(8638200);
@@ -481,6 +552,7 @@ describe('FetchService', () => {
   it('update specVersionMap once when specVersion map is out', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -503,8 +575,9 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
-    await fetchService.init();
+    fetchService = await createFetchService(project, batchSize, indexerManager);
+    await fetchService.init(1);
+    fetchService.onApplicationShutdown();
 
     (fetchService as any).latestFinalizedHeight = 10437859;
     //mock specVersion map
@@ -520,6 +593,7 @@ describe('FetchService', () => {
   it('prefetch meta for different specVersion range', async () => {
     const batchSize = 5;
     const project = testSubqueryProject();
+    const indexerManager = mockIndexerManager();
     //set dictionary to a different network
     project.network.dictionary =
       'https://api.subquery.network/sq/subquery/polkadot-dictionary';
@@ -542,8 +616,9 @@ describe('FetchService', () => {
       },
     ];
 
-    fetchService = await createFetchService(project, batchSize);
-    await fetchService.init();
+    fetchService = await createFetchService(project, batchSize, indexerManager);
+    await fetchService.init(1);
+    fetchService.onApplicationShutdown();
 
     (fetchService as any).latestFinalizedHeight = 10437859;
     //mock specVersion map
