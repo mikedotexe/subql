@@ -252,6 +252,11 @@ export class FetchService implements OnApplicationShutdown {
         ? specVersionResponse
         : [];
 
+    await this.blockDispatcher.init(
+      this.getRuntimeVersion.bind(this),
+      this.resetForNewDs.bind(this),
+    );
+
     void this.startLoop(startHeight);
   }
 
@@ -496,8 +501,7 @@ export class FetchService implements OnApplicationShutdown {
   async resetForNewDs(blockHeight: number): Promise<void> {
     await this.syncDynamicDatascourcesFromMeta();
     this.updateDictionary();
-    this.blockBuffer.reset();
-    this.blockNumberBuffer.reset();
+    this.blockDispatcher.flushQueue();
     this.setLatestBufferedHeight(blockHeight);
   }
 

@@ -245,7 +245,6 @@ function createFetchService(
   project: SubqueryProject,
   batchSize?: number,
 ) {
-
   const dsProcessorService = new DsProcessorService(project);
   const dynamicDsService = new DynamicDsService(dsProcessorService, project);
   (dynamicDsService as any).getDynamicDatasources = jest.fn(() => []);
@@ -356,6 +355,8 @@ describe('FetchService', () => {
           (fetchService as any).blockDispatcher.onApplicationShutdown();
           resolve(undefined);
         }
+
+        return { dynamicDsCreated: false };
       });
     });
 
@@ -635,6 +636,8 @@ describe('FetchService', () => {
           (fetchService as any).blockDispatcher.onApplicationShutdown();
           resolve(undefined);
         }
+
+        return { dynamicDsCreated: false };
       });
     });
 

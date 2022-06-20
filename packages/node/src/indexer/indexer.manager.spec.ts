@@ -154,7 +154,7 @@ function createIndexerManager(project: SubqueryProject): IndexerManager {
     project,
   );
   const projectService = new ProjectService(
-    dsPluginService,
+    dsProcessorService,
     apiService,
     poiService,
     mmrService,
@@ -176,7 +176,7 @@ function createIndexerManager(project: SubqueryProject): IndexerManager {
     project,
     nodeConfig,
     sandboxService,
-    dsPluginService,
+    dsProcessorService,
     dynamicDsService,
     subqueryRepo,
     // eventEmitter,
