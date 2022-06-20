@@ -71,10 +71,10 @@ describe('SubqueryProject', () => {
           version: '*',
         },
       };
-
       const project = await SubqueryProject.create(projectDirV1_0_0, {
         endpoint: 'wss://rpc.polkadot.io/public-ws',
       });
+
       expect(project.runner).toMatchObject(expectedRunner);
     }, 500000);
 
