@@ -10,6 +10,7 @@ describe('SubqueryProject', () => {
     let projectDirV0_2_0: string;
     let projectDirV0_3_0: string;
     let projectDirV1_0_0: string;
+    let templateProject: string;
 
     beforeEach(() => {
       projectDirV0_2_0 = path.resolve(
@@ -25,6 +26,10 @@ describe('SubqueryProject', () => {
       projectDirV1_0_0 = path.resolve(
         __dirname,
         '../../test/projectFixture/v1.0.0',
+      );
+      templateProject = path.resolve(
+        __dirname,
+        '../../test/projectFixture/template-v1.0.0',
       );
     });
 
@@ -86,5 +91,16 @@ describe('SubqueryProject', () => {
         '0x401a1f9dca3da46f5c4091016c8a2f26dcea05865116b286f60f668207d1474b',
       );
     }, 5000000);
+
+    it('check loadProjectTemplates', async () => {
+      const project = await SubqueryProject.create(templateProject, {
+        endpoint: 'wss://moonbeam-alpha.api.onfinality.io/public-ws',
+      });
+      const project_v1 = await SubqueryProject.create(projectDirV1_0_0, {
+        endpoint: 'wss://rpc.polkadot.io/public-ws',
+      });
+      expect(project_v1).not.toContain('template');
+      expect(project.templates.length).toBe(1);
+    });
   });
 });
