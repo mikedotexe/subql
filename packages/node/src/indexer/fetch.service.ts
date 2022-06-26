@@ -7,6 +7,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Interval } from '@nestjs/schedule';
 import { ApiPromise } from '@polkadot/api';
 import { RuntimeVersion } from '@polkadot/types/interfaces';
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util';
+
 import {
   isRuntimeDataSourceV0_2_0,
   RuntimeDataSourceV0_0_1,
@@ -48,7 +50,7 @@ import { IndexerEvent } from './events';
 import { BlockContent } from './types';
 
 const logger = getLogger('fetch');
-const BLOCK_TIME_VARIANCE = 5;
+let BLOCK_TIME_VARIANCE = 30;
 const DICTIONARY_MAX_QUERY_SIZE = 10000;
 const CHECK_MEMORY_INTERVAL = 60000;
 const HIGH_THRESHOLD = 0.85;
@@ -66,6 +68,29 @@ const fetchBlocksBatches = argv.profiler
     )
   : SubstrateUtil.fetchBlocksBatches;
 
+const THRESHOLD = BN_THOUSAND.div(BN_TWO);
+const DEFAULT_TIME = new BN(6_000);
+const A_DAY = new BN(24 * 60 * 60 * 1000);
+function calcInterval(api: ApiPromise): BN {
+  return bnMin(
+    A_DAY,
+    // Babe, e.g. Relay chains (Substrate defaults)
+    api.consts.babe?.expectedBlockTime ||
+      // POW, eg. Kulupu
+      (api.consts.difficulty?.targetBlockTime as any) ||
+      // Subspace
+      api.consts.subspace?.expectedBlockTime ||
+      // Check against threshold to determine value validity
+      (api.consts.timestamp?.minimumPeriod.gte(THRESHOLD)
+        ? // Default minimum period config
+          api.consts.timestamp.minimumPeriod.mul(BN_TWO)
+        : api.query.parachainSystem
+        ? // default guess for a parachain
+          DEFAULT_TIME.mul(BN_TWO)
+        : // default guess for others
+          DEFAULT_TIME),
+  );
+}
 function eventFilterToQueryEntry(
   filter: SubstrateEventFilter,
 ): DictionaryQueryEntry {
@@ -283,6 +308,13 @@ export class FetchService implements OnApplicationShutdown {
   }
 
   async init(): Promise<void> {
+    // check if api is ready then use calc
+    if (this.api) {
+      const CHAIN_INTERVAL = calcInterval(this.api).toNumber() / 1000;
+      console.log(`CHAIN_INTERVAL: ${CHAIN_INTERVAL}`);
+      BLOCK_TIME_VARIANCE = Math.min(BLOCK_TIME_VARIANCE, CHAIN_INTERVAL);
+      console.log(`BLOCK_TIME_VARIANCE: ${BLOCK_TIME_VARIANCE}`);
+    }
     await this.syncDynamicDatascourcesFromMeta();
     this.updateDictionary();
     this.eventEmitter.emit(IndexerEvent.UsingDictionary, {
@@ -312,8 +344,9 @@ export class FetchService implements OnApplicationShutdown {
     }
   }
 
-  @Interval(BLOCK_TIME_VARIANCE * 1000)
+  @Interval('notifications', BLOCK_TIME_VARIANCE * 1000)
   async getFinalizedBlockHead() {
+    console.log('getFinalisedBlockHead', Date.now());
     if (!this.api) {
       logger.debug(`Skip fetch finalized block until API is ready`);
       return;
