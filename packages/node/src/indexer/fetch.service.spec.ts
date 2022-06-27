@@ -3,6 +3,9 @@
 
 import path from 'path';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { BN } from '@polkadot/util';
+
 import {
   SubstrateDatasourceKind,
   SubstrateHandlerKind,
@@ -38,6 +41,19 @@ function mockRejectedApiService(): ApiService {
 
 function mockApiService(): ApiService {
   const mockApi = {
+    consts: {
+      babe: {
+        epochDuration: 0x0000000000000960,
+        expectedBlockTime: 0x0000000000001770,
+        maxAuthorities: 0x000186a0,
+      },
+      timestamp: {
+        minimumPeriod: 0x0000000000000bb8,
+      },
+    },
+    query: {
+      parachainSystem: undefined,
+    },
     rpc: {
       state: {
         getRuntimeVersion: jest.fn(() => {
@@ -233,6 +249,7 @@ function createFetchService(
     new DsProcessorService(project),
     dynamicDsService,
     new EventEmitter2(),
+    new SchedulerRegistry(),
   );
 }
 
@@ -256,6 +273,7 @@ describe('FetchService', () => {
       new DictionaryService(project),
       project,
     );
+    (fetchService as any).calcInterval = new BN(0x0000000000001770);
     await fetchService.init();
     expect(
       apiService.getApi().rpc.chain.getFinalizedHead,
@@ -344,6 +362,7 @@ describe('FetchService', () => {
     });
     const dsPluginService = new DsProcessorService(project);
     const eventEmitter = new EventEmitter2();
+    const schedulerRegistry = new SchedulerRegistry();
     const dsProcessorService = new DsProcessorService(project);
     const dynamicDsService = new DynamicDsService(dsProcessorService, project);
     const fetchService = new FetchService(
@@ -354,6 +373,7 @@ describe('FetchService', () => {
       dsPluginService,
       dynamicDsService,
       eventEmitter,
+      schedulerRegistry,
     );
 
     const nextEndBlockHeightSpy = jest.spyOn(
@@ -409,6 +429,7 @@ describe('FetchService', () => {
     ];
     const dictionaryService = mockDictionaryService3();
     const dsPluginService = new DsProcessorService(project);
+    const schedulerRegistry = new SchedulerRegistry();
     const eventEmitter = new EventEmitter2();
     const dsProcessorService = new DsProcessorService(project);
     const dynamicDsService = new DynamicDsService(dsProcessorService, project);
@@ -421,6 +442,7 @@ describe('FetchService', () => {
       dsPluginService,
       dynamicDsService,
       eventEmitter,
+      schedulerRegistry,
     );
     await fetchService.init();
     const nextEndBlockHeightSpy = jest.spyOn(
@@ -469,6 +491,7 @@ describe('FetchService', () => {
       },
     ];
     const dictionaryService = mockDictionaryService1();
+    const schedulerRegistry = new SchedulerRegistry();
     const dsPluginService = new DsProcessorService(project);
     const dsProcessorService = new DsProcessorService(project);
     const dynamicDsService = new DynamicDsService(dsProcessorService, project);
@@ -482,6 +505,7 @@ describe('FetchService', () => {
       dsPluginService,
       dynamicDsService,
       eventEmitter,
+      schedulerRegistry,
     );
     const nextEndBlockHeightSpy = jest.spyOn(
       fetchService as any,
