@@ -321,25 +321,29 @@ export class FetchService implements OnApplicationShutdown {
       !!this.project.network.dictionary;
   }
 
+  addInterval(name: string, milliseconds: number, handler: () => void) {
+    const interval = setInterval(handler.bind(this), milliseconds);
+    this.schedulerRegistry.addInterval(name, interval);
+  }
+
   async init(): Promise<void> {
     if (this.api) {
-      const CHAIN_INTERVAL = +calcInterval(this.api) * INTERVAL_PERCENT;
+      const CHAIN_INTERVAL = calcInterval(this.api)
+        .muln(INTERVAL_PERCENT)
+        .toNumber();
       BLOCK_TIME_VARIANCE = Math.min(BLOCK_TIME_VARIANCE, CHAIN_INTERVAL);
-
-      const interval_finalized = setInterval(
-        () => void this.getFinalizedBlockHead(),
-        BLOCK_TIME_VARIANCE,
-      );
-      const interval_best = setInterval(
-        () => void this.getBestBlockHead(),
-        BLOCK_TIME_VARIANCE,
-      );
 
       this.schedulerRegistry.addInterval(
         'getFinalizedBlockHead',
-        interval_finalized,
+        setInterval(
+          () => void this.getFinalizedBlockHead(),
+          BLOCK_TIME_VARIANCE,
+        ),
       );
-      this.schedulerRegistry.addInterval('getBestBlockHead', interval_best);
+      this.schedulerRegistry.addInterval(
+        'getBestBlockHead',
+        setInterval(() => void this.getBestBlockHead(), BLOCK_TIME_VARIANCE),
+      );
     }
     await this.syncDynamicDatascourcesFromMeta();
     this.updateDictionary();
